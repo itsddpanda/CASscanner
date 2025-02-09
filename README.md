@@ -3,7 +3,7 @@ To scan detailed CAS shared via Karvy (https://mfs.kfintech.com/investor/General
 Currently it only scan CAS statement (link to generate above) and creates a workbook, storing fund details in seperate excel sheets.
 
 ## A Scanner Again? Why??
-It is a make shift attempt to get away from all the insane apps, away from the need to share your personal identifiable information with them. No doubt there are many portfolio scanner out there and **all are _better_ than this**.
+It is a make-shift attempt to get away from all the insane apps, away from the need to share your personal identifiable information with them. No doubt there are many portfolio scanner out there and **all are _better_ than this**.
 But I just couldn't stand giving up my data when we can do it on our own. 
 Financial Literacy is important and it sucks to see all are using this as a platform to make money while for everything else we got free apps.
 Thus after sabbatical of 12 years I picked up coding again, with what i can remember, since i know a bit about excel thus started it in VBA.
@@ -43,6 +43,7 @@ Please do not miss these two.
 Ensure you are starting fresh or if something went wrong in between and you are restarting. 
 
 Simply follow next line
+
 Goto developer tools or press ALT + F8. 
 Select Macro Named **"Restart"** and hit RUN to ensure you are starting fresh.
 
