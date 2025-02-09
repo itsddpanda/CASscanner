@@ -30,7 +30,7 @@ If you are importing-
 ### Run it aka use the excel sheet
 Either you imported the modules (and form) or using the excel here in follow the steps and you should be golden
 
-      <summary> Pre-Requisites </summary>
+  Pre-Requisites
       You would need CAS, - Get CAS from Karvy, ![](https://mfs.kfintech.com/investor/General/ConsolidatedAccountStatement).
       Since this file is password protected, you would need to unlock it and make it password free i.e. opens without password. Google "pdf password removal". 
       You will get many online tools for it.
