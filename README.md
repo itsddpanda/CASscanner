@@ -31,7 +31,9 @@ If you are importing-
 Either you imported the modules (and form) or using the excel here in follow the steps and you should be golden
 
 ### Pre-Requisites
-You would need CAS, - Get CAS from Karvy(https://mfs.kfintech.com/investor/General/ConsolidatedAccountStatement).
+You would need CAS, - Get CAS from Karvy(https://mfs.kfintech.com/investor/General/ConsolidatedAccountStatement). Select detailed report
+![](https://github.com/itsddpanda/CASscanner/blob/main/delete.png)
+
 Since this file is password protected, you would need to unlock it and make it password free i.e. opens without password. Google "pdf password removal". 
 You will get many online tools for it.
 
