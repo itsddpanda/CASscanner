@@ -1,7 +1,7 @@
 Attribute VB_Name = "Module1"
-Dim Foliocont As Boolean, ISFound As Boolean
+Dim Foliocont As Boolean, ISFound As Boolean, CASFound As Boolean, WBAdd As Boolean
 Dim currentFolio, twb As String
-Dim ISIN As String
+Dim isin As String
 Dim closingbalanace As Collection, folios As Collection
 Dim OUB As Double
 Dim transactionStartRow As Long, transactionEndRow As Long
@@ -9,25 +9,25 @@ Dim transactionStartRow As Long, transactionEndRow As Long
 
 Sub Step1_SelectPDFFile()
 ' Version 2.0.1 - Step 1: Ask user to select a PDF file and store file name
-    
+    Dim goforlaunch As Integer
     On Error GoTo ErrorHandler ' Enable error handling with custom message
-    
     Dim wb As Workbook
     Dim ws As Worksheet
-    Dim pdfFilePath As String
+    Dim pdfFilePath As Variant
     Dim FetchFN As Boolean
-
+goforlaunch = 0
 FetchFN = False
     ' Initialize workbook
 10  Set wb = ThisWorkbook
 
+    If MsgBox(" Starting the process, Hope you have" & vbCrLf & vbCrLf & "1. Unlocked (password removed) PDF File" & vbCrLf & "2. NAVAll.txt file saved from AMFI website" & vbCrLf & vbCrLf & vbCrLf & "If you are not ready hit cancel now to abort" & vbCrLf & vbCrLf & vbCrLf & "Click OK To Proceed", vbOKCancel) = vbCancel Then Exit Sub
     ' Check if "Helper" sheet exists, if not create it
 20  On Error Resume Next
 30  Set ws = wb.Sheets("Helper")
 40  On Error GoTo ErrorHandler
 50  If ws Is Nothing Then
 60      Set ws = wb.Sheets.Add(after:=wb.Sheets(wb.Sheets.Count))
-70      ws.Name = "Helper" ' Create and name the Helper sheet
+70      ws.name = "Helper" ' Create and name the Helper sheet
         FetchFN = True
 80  End If
 
@@ -36,16 +36,62 @@ FetchFN = False
     
 90  If FetchFN Then
     pdfFilePath = Application.GetOpenFilename("PDF Files (*.pdf), *.pdf", , "Select PDF File")
+    'On Error Resume Next
 100 If pdfFilePath = False Then
 110     MsgBox "No file selected. Exiting...", vbExclamation
+        Application.DisplayAlerts = False
+        ws.Delete
+        Application.DisplayAlerts = True
 120     Exit Sub
 130 End If
 
     ' Store the selected PDF file path in the Helper sheet (cell A1)
 140 ws.Cells(1, 1).Value = pdfFilePath ' Store PDF path for future reference
-150 MsgBox "PDF file path stored successfully!", vbInformation
+180 ws.Cells(1, 2).Value = "Source PDF File"
+190 MsgBox "PDF file path stored successfully! Name the outputfile next.", vbInformation
+    pdfFilePath = Application.GetSaveAsFilename( _
+                  InitialFileName:="MyWorkbook.xlsx", _
+                  FileFilter:="Excel Files (*.xlsx), *.xlsx", _
+                  Title:="Save Workbook As")
+    ws.Cells(2, 1).Value = Mid(pdfFilePath, InStrRev(pdfFilePath, "\") + 1)
+    ws.Cells(2, 2).Select
+    ws.Cells(2, 2).Value = "Target Data File"
+    
+    If ws.Cells(2, 1).Value = False Then
+    Selection.Style = "BAD"
+    Else
+    Selection.Style = "Good"
+    goforlaunch = goforlaunch + 1
+    End If
+
+    MsgBox pdfFilePath & " - Output File Name Stored. Locate NAVAll.txt from AMFI website", vbInformation
+    pdfFilePath = Application.GetOpenFilename("Text Files (*.txt), *.txt", , "Select NAVAll.txt File")
+    ws.Cells(3, 1).Value = pdfFilePath
+    ws.Cells(3, 2).Value = "NAVAll.txt"
+    ws.Cells(3, 2).Select
+    If ws.Cells(3, 1).Value = False Then
+    Selection.Style = "BAD"
+    Else
+    Selection.Style = "Good"
+    goforlaunch = goforlaunch + 1
+    End If
+    ws.Cells(1, 2).Select
+    Selection.Style = "Good"
+    ws.Cells.EntireColumn.AutoFit
+150
+If goforlaunch = 2 Then
+    If MsgBox("You are go for LAUNCH, LAUNCH IT?", vbYesNo, "Conditions Met") = vbYes Then
+        frmSplash.Show vbModeless
+        frmSplash.UpdateCap "LAUNCHING - STEP 2/4 - READ and EXTRACT PDF SCHEMA - KEEP FINGERS CROSSED"
+        Step2_ExtractTableIDs
+        frmSplash.UpdateCap "LAUNCHING - STEP 3/4 - READ PDF as per the SCHEMA"
+        Step3_ReadPortfolioData
+        frmSplash.UpdateCap "LAUNCHING - STEP 4/4 (as of now) - FIND Valid Data and Create the OUTPUT file"
+        Step4_readsheets
+    End If
+End If
 Else
-MsgBox "Using existing CAS, Delete Helper to start Afresh"
+MsgBox "Helper Sheet exist thus not asking for new file input" & vbCrLf & "Delete Helper sheet to start Afresh", vbExclamation, "Run the sequence"
 
 End If
 
@@ -56,7 +102,7 @@ ErrorHandler:
 170 MsgBox "An error occurred on line " & Erl & ": " & Err.Description, vbCritical, "Error " & Err.Number
 End Sub
 
-Sub ExtractTableIDs()
+Sub Step2_ExtractTableIDs()
     ' Version 2.0.3 - Step 2: Extract table IDs from PDF, execute after Step 1
     On Error GoTo ErrorHandler ' Enable error handling
     
@@ -69,19 +115,28 @@ Sub ExtractTableIDs()
 
     ' Initialize workbook and worksheet
 10  Set wb = ThisWorkbook
+On Error Resume Next
 20  Set ws = wb.Sheets("Helper") ' Helper sheet to store file path
-
+On Error GoTo ErrorHandler
+If ws Is Nothing Then
+MsgBox "Helper Sheet missing, Did you run Step 1?", vbExclamation, "Run the sequence"
+Exit Sub
+End If
     ' Retrieve the file path from the Helper sheet
 30  pdfFilePath = ws.Range("A1").Value
 40  If pdfFilePath = "" Then
 50      MsgBox "No PDF file path found. Exiting...", vbExclamation
 60      Exit Sub
 70  End If
-
+frmSplash.Show vbModeless
+frmSplash.UpdateCap ("LAUNCHING - STEP 2/4 - READ and EXTRACT PDF SCHEMA - KEEP FINGERS CROSSED")
+Application.ScreenUpdating = False
+frmSplash.UpdateProgressBar 0.1
+Application.Wait Now + TimeValue("00:00:01")
     ' Define the Power Query M code
 80  pqMCode = _
         "let" & vbCrLf & _
-        "    Source = Pdf.Tables(File.Contents(""C:\Users\shubham\Downloads\1newmf.pdf""), [Implementation = ""1.1""])," & vbCrLf & _
+        "    Source = Pdf.Tables(File.Contents(""" & pdfFilePath & """), [Implementation = ""1.1""])," & vbCrLf & _
         "    #""Filtered Rows"" = Table.SelectRows(Source, each Text.Contains([Id], ""Page""))," & vbCrLf & _
         "    TableIDs = Table.SelectColumns(#""Filtered Rows"",{""Id""})," & vbCrLf & _
         "    CleanedData = Table.Distinct(TableIDs)" & vbCrLf & _
@@ -97,23 +152,31 @@ Sub ExtractTableIDs()
 120 On Error GoTo ErrorHandler ' Restore error handling
 
     ' Create a new query to extract Table IDs
-130 wb.Queries.Add Name:=queryName, Formula:=pqMCode
+130 wb.Queries.Add name:=queryName, Formula:=pqMCode
 
     ' Check and create PDF_Table_IDs if missing
 140 sheetExists = False
 150 For Each ws In wb.Sheets
-160     If ws.Name = "PDF_Table_IDs" Then
+160     If ws.name = "PDF_Table_IDs" Then
 170         sheetExists = True
+            Set ws = wb.Sheets("PDF_Table_IDs")
+            MyDebugPrint vbCrLf & "Clearing OLD Data" & vbCrLf
+            frmSplash.UpdateProgressBar 0.2
+            frmSplash.UpdateCap "LAUNCHING - STEP 2/4 - READ and EXTRACT PDF SCHEMA - KEEP FINGERS CROSSED"
+            Application.Wait Now + TimeValue("00:00:01")
+            ws.Range("A:A").Delete
 180         Exit For
 190     End If
 200 Next ws
 210 If Not sheetExists Then
 220     Set ws = wb.Sheets.Add
-230     ws.Name = "PDF_Table_IDs"
+230     ws.name = "PDF_Table_IDs"
 240 Else
 250     Set ws = wb.Sheets("PDF_Table_IDs")
 260 End If
-
+MyDebugPrint "Fetching Data for Query :" & pqMCode & vbCrLf & "**********************************" & vvbcrlf
+frmSplash.UpdateProgressBar 0.5
+frmSplash.UpdateCap "LAUNCHING - STEP 2/4 - READ and EXTRACT PDF SCHEMA - KEEP FINGERS CROSSED"
     ' Load the query into the worksheet
 270 With ws.ListObjects.Add(SourceType:=0, Source:="OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=" & queryName, Destination:=ws.Range("$A$1")).QueryTable
 280     .CommandType = xlCmdSql
@@ -130,20 +193,43 @@ Sub ExtractTableIDs()
 390     .PreserveColumnInfo = True
 400     .Refresh BackgroundQuery:=False
 410 End With
+Application.Wait Now + TimeValue("00:00:01")
+frmSplash.UpdateProgressBar 1
+frmSplash.UpdateCap ("LAUNCHING - STEP 2/4 - READ and EXTRACT PDF SCHEMA - KEEP FINGERS CROSSED")
+frmSplash.lblProgressText.Caption = "COMPLETED...Exiting in 1 sec"
+Application.Wait Now + TimeValue("00:00:01")
+420 'MsgBox "Table IDs extracted and loaded successfully! Execute Step 3", vbInformation
 
-420 MsgBox "Table IDs extracted and loaded successfully! Execute Step 3", vbInformation
-
+    wb.Queries(queryName).Delete
+    Application.ScreenUpdating = True
+    Unload frmSplash
+    Set ws = wb.Sheets("Helper")
+    If ws.Range("A2") = "" Then
+    ws.Cells(2, 2).Value = "Provide Output File Name (with extension ex: .xlsx)"
+    ws.Activate
+    ws.Cells(2, 2).Select
+    Selection.Style = "Bad"
+    End If
+    If ws.Range("A3") = "" Then
+    ws.Range("B3").Value = "[o]Provide NAVAll.txt"
+    ws.Range("B3").Select
+    Selection.Style = "Bad"
+    End If
+    ws.Cells.EntireColumn.AutoFit
+    ws.Activate
 430 Exit Sub
 
 ErrorHandler:
+Application.ScreenUpdating = True
+Unload frmSplash
 440 MsgBox "An error occurred on line " & Erl & ": " & Err.Description, vbCritical, "Error " & Err.Number
 End Sub
 
 
-Function GetFundNameByISIN(ByVal ISIN As String) As String
+Function GetFundNameByISIN(ByVal isin As String, Optional ByVal whichone As Integer) As String
     ' Version 1.0.2 - Retrieves fund name by ISIN from navall file
     On Error GoTo ErrorHandler
-
+    
     Dim http As Object
     Dim filepath As String
     Dim saveDialog As FileDialog
@@ -156,7 +242,10 @@ Function GetFundNameByISIN(ByVal ISIN As String) As String
     Set wb = Workbooks("pdf ingestion v0.3.xlsm") 'need to allocate dynamically
 filepath = wb.Sheets("Helper").Range("A3").Value
 If filepath = "" Then
-      MsgBox "No file path found in cell A3. Please specify a valid path.", vbExclamation
+      MyDebugPrint vbCrLf & "*********************************" & vbCrLf & "No NAV data path found in cell A3 of Helper. Please specify a valid path." & vbCrLf & "*********************************" & vbCrLf
+      frmSplash.lblProgressText.Caption = "Error"
+      Application.Wait Now + TimeValue("00:00:01")
+      'MsgBox "NAV file missing"
       Exit Function
 End If
 
@@ -167,15 +256,18 @@ End If
     ' Open the file to search for the ISIN
     fileNum = FreeFile
     Open filepath For Input As #fileNum
-
     Do While Not EOF(fileNum)
         Line Input #fileNum, line
         ' Check if the line contains the ISIN
-        If InStr(line, ISIN) > 0 Then
+        If InStr(line, isin) > 0 Then
             Dim fields() As String
             fields = Split(line, ";")
-            If UBound(fields) >= 3 Then
-                fundName = fields(3) ' Extract the 4th field (Scheme Name)
+            If UBound(fields) >= 5 Then
+                If Not IsNumeric(whichone) Then
+                    fundName = fields(3) ' Extract the 4th field (Scheme Name)
+                Else
+                    fundName = fields(whichone) 'Extract whichone !!
+                End If
             Else
                 fundName = "Error: Invalid file format"
             End If
@@ -197,7 +289,7 @@ End If
 ErrorHandler:
     MsgBox "An error occurred: " & Err.Description, vbCritical
 End Function
-Sub Step3()
+Sub Step3_ReadPortfolioData()
 On Error GoTo ErrorHandler
 
 Dim wb As Workbook
@@ -213,13 +305,13 @@ Set wb = ThisWorkbook
 
 'check if extracted data in step 2 can be ommited in final
 For Each wd In wb.Sheets
-     If wd.Name = "PDF_Table_IDs" Then
+     If wd.name = "PDF_Table_IDs" Then
          sheetExists = True
          Exit For
      End If
  Next wd
  If Not sheetExists Then
-    MsgBox "Run Step 2 first"
+    MsgBox "Run Step 2 first", vbExclamation, "Run the sequence"
     Exit Sub 'Code execution stops here
  End If
 
@@ -233,23 +325,28 @@ filepath = wb.Sheets("Helper").Range("A1").Value
 End If
 
 ' Loop through each table ID in the "PDF_Table_IDs" worksheet
-    NoofIDs = tableWs.Cells(Rows.Count, 1).End(xlUp).row - 1
+    NoofIDs = tableWs.Cells(Rows.Count, 1).End(xlUp).row
     
+frmSplash.Show vbModeless
+Application.ScreenUpdating = False
 'Start Master loop to get table data
 For j = 2 To tableWs.Cells(Rows.Count, 1).End(xlUp).row
+frmSplash.UpdateProgressBar j / NoofIDs
     tableID = tableWs.Cells(j, 1).Value
         If tableID = "" Then 'Empty table id how??? but skip if any
             Exit For
         End If
     'If "TableData_" tableID exist then delete it
     For Each wd In wb.Sheets
-        If wd.Name = "TableData_" & tableID Then
+        If wd.name = "TableData_" & tableID Then
+            Application.DisplayAlerts = False
             wd.Delete
+            Application.DisplayAlerts = True
             Exit For
         End If
     Next wd
   Set ws = wb.Sheets.Add ' Create a new worksheet for the current table data
-  ws.Name = "TableData_" & tableID
+  ws.name = "TableData_" & tableID
 
 ' Build the Power Query formula for extracting data from the PDF table
     queryFormula = "let" & vbCrLf & _
@@ -271,7 +368,7 @@ On Error Resume Next
                 wb.Queries(queryName).Delete
                 wb.Queries.Add queryName, queryFormula
     End If
-    
+    MyDebugPrint "Fetching data for :" & queryName & vbCrLf & "QUERY = " & queryFormula & "*************************************" & vbCrLf
     With ws.ListObjects.Add(SourceType:=0, Source:="OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=" & queryName, Destination:=ws.Range("$A$1")).QueryTable
      .CommandType = xlCmdSql
      .CommandText = Array("SELECT * FROM [" & queryName & "]")
@@ -289,23 +386,34 @@ On Error Resume Next
     End With
     'Hidden for now Call Step4
     'Step4_readsheet ByVal ws.Name
-    Module2.DeleteAllQueriesAndConnections
+    DeleteAllQueriesAndConnections
 '    Application.DisplayAlerts = False
 '    ws.Delete
 '    Application.DisplayAlerts = True
 Next j
+    Application.ScreenUpdating = True
+    frmSplash.lblProgressText.Caption = "COMPLETED...Exiting in 1 sec"
+    Application.Wait Now + TimeValue("00:00:02")
+    Unload frmSplash
+    Set ws = wb.Sheets("Helper")
+    ws.Select
+    ws.Range("A1").Select
     Exit Sub
 ErrorHandler:
+    Application.ScreenUpdating = True
+    frmSplash.lblProgressText.Caption = "ERROR...Exiting in 1 sec"
+    Application.Wait Now + TimeValue("00:00:02")
+    Unload frmSplash
     MsgBox "An error occurred on line in Step 3 " & ": " & Err.Description, vbCritical, "Error " & Err.Number
 End Sub
 
 
-Sub Step4_readsheet()
+Sub Step4_readsheets()
 'version 3.0.0 starting again 14/12
 'Old step 4 is in module 4 and older is in archive
 'On Error GoTo ErrorHandler ' Enable error handling
 
-Dim wb As Workbook
+Dim wb As Workbook, wbt As Workbook
 Dim wd As Worksheet, ws As Worksheet, tableWs As Worksheet
 Dim sheetExists As Boolean
 Dim j As Long, i As Long, NoofIDs As Long
@@ -316,23 +424,55 @@ Dim folioRange As Range
 Dim openbal As Double
 Dim transaction As Object
 Dim TotalSteps As Long
+Dim datestart As Date, dateend As Date
 
-frmSplash.Show vbModeless
-Application.ScreenUpdating = False
 Set wb = ThisWorkbook
 'check if extracted data in step 2 is found
 For Each wd In wb.Sheets
-     If wd.Name = "PDF_Table_IDs" Then
+     If wd.name = "PDF_Table_IDs" Then
          sheetExists = True
          Exit For
      End If
  Next wd
  If Not sheetExists Then
-    MsgBox "Could Not find PDF Table IDs, did you ran Step 2 (and 3)"
+    MsgBox "Could Not find PDF Table IDs, Did you run Step 2 (and 1 and 3)", vbExclamation, "Run the sequence"
     Application.ScreenUpdating = True
     Unload frmSplash
     Exit Sub 'Code execution stops here
  End If
+ If wb.Sheets("Helper").Range("A3").Value = "" Then MsgBox "Continuing without NAVAll.txt file" & vbCrLf & "Fund Name will not be captured for new folio and you may see an error", vbInformation, "Just an FYI"
+
+'check if MF Data exist
+If FileExists(wb.Sheets("Helper").Range("A2").Value) Then
+    Set wbt = Workbooks.Open(ThisWorkbook.Path & "\" & wb.Sheets("Helper").Range("A2").Value)
+    For Each wd In wbt.Sheets
+        If wd.name = "Log" Then
+            Set ws = wbt.Sheets("Log")
+            Exit For
+        End If
+    Next wd
+    If Not ws Is Nothing Then
+        If ws.name = "Log" Then
+            FindAndExtractDates datestart, dateend
+            WBAdd = False
+            If datestart < ws.Cells(ws.Cells(Rows.Count, 1).End(xlUp).row, 3).Value Then
+                MsgBox "New CAS date is not new than already imported data, , Exiting", vbCritical, "Can not continue"
+                Exit Sub
+            Else
+                'find last row
+                Dim lastrow As Long
+                lastrow = ws.Cells(Rows.Count, 1).End(xlUp).row + 1
+                ws.Cells(lastrow, 1).Value = Format(Date, "dd/mm/yyyy")
+                ws.Cells(lastrow, 2).Value = datestart
+                ws.Cells(ws.Cells(Rows.Count, 1).End(xlUp).row, 3).Value = dateend
+            End If
+        End If
+    End If
+Else
+WBAdd = True
+End If
+frmSplash.Show vbModeless
+Application.ScreenUpdating = False
 Set tableWs = wb.Sheets("PDF_Table_IDs") 'worksheet for table ids
 NoofIDs = tableWs.Cells(Rows.Count, 1).End(xlUp).row
 TotalSteps = NoofIDs
@@ -353,45 +493,29 @@ Set ws = wb.Sheets(tableID)
 If Foliocont = True Then
     If ws.Cells(2, 1).Value = "" Then
             'On Error Resume Next
-            MyDebugPrint "FIND Transaction 1 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
+            MyDebugPrint "FIND Transaction 1 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & isin & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
             Set transactionData = FindTransactions(ws, ws.Range("B2"), ws.Range("A1"), ws.Range("A6"))
+            If transactionData Is Nothing Then
+                Foliocont = False 'Closing
+                GoTo lol
+            End If
             Set closingbalanace = FindAllOccurrences(ws, "Closing", 1)
             If Not closingbalanace Is Nothing Then Foliocont = False 'MsgBox "closing"
-            MyDebugPrint "writemfdata 1 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & " Sheet: " & tableID & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
-            If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, ISIN) = False Then MsgBox "Error writing file"
+            MyDebugPrint "writemfdata 1 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & isin & " Sheet: " & tableID & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
+            If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, isin) = False Then MsgBox "Error writing file"
         Else
-            MyDebugPrint "FIND Transaction 2 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
+            MyDebugPrint "FIND Transaction 2 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & isin & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
             Set transactionData = FindTransactions(ws, ws.Range("A2"), ws.Range("A1"), ws.Range("A5"))
+            If transactionData Is Nothing Then
+                Foliocont = False 'Closing
+                GoTo lol
+            End If
             Set closingbalanace = FindAllOccurrences(ws, "Closing", 1)
             If Not closingbalanace Is Nothing Then Foliocont = False 'MsgBox "closing"
-            MyDebugPrint "writemfdata 2 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID & vbCr & "**************************"
-            If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, ISIN) = False Then MsgBox "Error writing file"
+            MyDebugPrint "writemfdata 2 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & isin & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID & vbCr & "**************************"
+            If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, isin) = False Then MsgBox "Error writing file"
         End If
 End If
-'If Not FindAllOccurrences(ws, "Folio No", 2) Is Nothing Then Set folios = FindAllOccurrences(ws, "Folio No", 2)
-'If folios Is Nothing Then
-'    If Foliocont = True Then
-'        If ws.Cells(2, 1).Value = "" Then
-'            Debug.Print "FIND Transaction 3 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCr & "Folios: NOTHING" & " Sheet: " & tableID
-'            Set transactionData = FindTransactions(ws, ws.Range("B2"), ws.Range("A1"), ws.Range("A5"))
-'            Set closingbalanace = FindAllOccurrences(ws, "Closing", 1)
-'            If Not closingbalanace Is Nothing Then Foliocont = False 'MsgBox "closing"
-'            Debug.Print "writemfdata 3 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
-'            If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, ISIN) = False Then MsgBox "Error writing file"
-'        Else
-'
-'            Debug.Print "FIND Transaction 4 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCr & "Folios: NOTHING" & " Sheet: " & tableID
-'            Set transactionData = FindTransactions(ws, ws.Range("A1"), ws.Range("A1"), ws.Range("A5"))
-'            Set closingbalanace = FindAllOccurrences(ws, "Closing", 1)
-'            If Not closingbalanace Is Nothing Then Foliocont = False 'MsgBox "closing"
-'            Debug.Print "writemfdata 4 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
-'            If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, ISIN) = False Then MsgBox "Error writing file"
-'        End If
-'    Else
-'        MsgBox "Error ! No new folio found and old folio already closed, what to do!?"
-'        Exit Sub
-'    End If
-'Else
     If Foliocont = False Then
     Set folios = FindAllOccurrences(ws, "Folio No", 2)
     If Not folios Is Nothing Then
@@ -401,7 +525,7 @@ End If
             ISFound = False
             'MsgBox folioRange.Address & " : " & folioRange.Value
             Set ISINC = FindAllOccurrences(ws, "ISIN", 1, folioRange)
-            ISIN = ExtractISINFromCollection(ISINC)
+            isin = ExtractISINFromCollection(ISINC)
             'MsgBox ISINC(1) & " : " & ISIN
             Set openingbalance = FindAllOccurrences(ws, "Opening", 1, ISINC(1))
             If Not openingbalance Is Nothing Then
@@ -411,19 +535,22 @@ End If
             Else
                 Set openingbalance = ISINC
             End If
-            MyDebugPrint "FIND Transaction 5 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
+            MyDebugPrint "FIND Transaction 5 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & isin & vbCr & "Folios: " & folios(i) & " Sheet: " & tableID
             Set transactionData = FindTransactions(ws, folios(i), openingbalance(1), ISINC(1))
-            If transactionData Is Nothing Then MsgBox "No valid transactions found. I dnt knw plz check yaar"
+            If transactionData Is Nothing Then
+                Foliocont = False 'Closing
+                GoTo lol
+            End If
             Set closingbalanace = FindAllOccurrences(ws, "Closing", 1, folioRange)
             If Not closingbalanace Is Nothing Then
                 Foliocont = False 'MsgBox "closing"
-                MyDebugPrint "writemfdata 5 Folio Flag: " & Foliocont & vbCr & "ISIN: " & ISIN & vbCr & "Folios: " & folios(i) & vbCr & "Openbal: " & openbal & " Sheet: " & tableID & vbCr & "**************************"
-                If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, ISIN, folios(i), openbal) = False Then MsgBox "Error writing file"
+                MyDebugPrint "writemfdata 5 Folio Flag: " & Foliocont & vbCr & "ISIN: " & isin & vbCr & "Folios: " & folios(i) & vbCr & "Openbal: " & openbal & " Sheet: " & tableID & vbCr & "**************************"
+                If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, isin, folios(i), openbal) = False Then MsgBox "Error writing file"
                 'MsgBox folios(i)
             Else
                 Foliocont = True 'continue with folio
-                MyDebugPrint "writemfdata 6 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & ISIN & vbCrLf & "Folios: " & folios(i) & vbCrLf & "Openbal: " & openbal & " Sheet: " & tableID
-                If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, ISIN, folios(i), openbal) = False Then MsgBox "Error writing file"
+                MyDebugPrint "writemfdata 6 Folio Flag: " & Foliocont & vbCrLf & "ISIN: " & isin & vbCrLf & "Folios: " & folios(i) & vbCrLf & "Openbal: " & openbal & " Sheet: " & tableID
+                If WriteMFData(wb.Sheets("Helper").Cells(2, 1).Value, transactionData, isin, folios(i), openbal) = False Then MsgBox "Error writing file"
                 Exit For
             End If
             'MsgBox closingbalanace(1).Address
@@ -431,8 +558,25 @@ End If
     End If
     End If
 'End If
+lol:
 Next j
 Module3.autofitcolumns (wb.Sheets("Helper").Cells(2, 1).Value)
+'Update CAS Dates
+If WBAdd = True Then
+    Set wb = Workbooks(wb.Sheets("Helper").Cells(2, 1).Value)
+    Set ws = wb.Sheets("Sheet1")
+    ws.name = "Log"
+    ws.Range("A1").Value = "Update Date"
+    ws.Range("B1").Value = "Start Date"
+    ws.Range("C1").Value = "End Date"
+    ws.Range("A2").Value = Format(Date, "dd/mm/yyyy")
+    FindAndExtractDates datestart, dateend
+    ws.Range("B2").Value = datestart
+    ws.Range("C2").Value = dateend
+    ws.Cells.EntireColumn.AutoFit
+    ws.Activate
+    wb.Save
+End If
 Application.ScreenUpdating = True
 frmSplash.lblProgressText.Caption = "COMPLETED...Exiting in 1 sec"
 Application.Wait Now + TimeValue("00:00:02")
@@ -446,7 +590,7 @@ Function FindAllOccurrences(ws As Worksheet, searchText As String, Optional ByVa
     ' Version 1.0.0 - Find and track all occurrences of a search term (e.g., "Folio")
     'On Error GoTo ErrorHandler ' Enable error handling
 
-    Dim foundCell As Range
+    Dim foundcell As Range
     Dim firstAddress As String
     Dim occurrences As New Collection
     Dim startRow As Long
@@ -460,26 +604,26 @@ Function FindAllOccurrences(ws As Worksheet, searchText As String, Optional ByVa
         startRow = after.row
     End If
     
-    Set foundCell = ws.Cells.Find(What:=searchText, after:=after, _
+    Set foundcell = ws.Cells.Find(What:=searchText, after:=after, _
                                   LookIn:=xlValues, LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False)
-    If Not foundCell Is Nothing And multi > 1 Then
-        firstAddress = foundCell.Address ' Track the first found cell
+    If Not foundcell Is Nothing And multi > 1 Then
+        firstAddress = foundcell.Address ' Track the first found cell
 
         Do
              'Add the found cell to the collection
-            occurrences.Add foundCell
+            occurrences.Add foundcell
 
             ' Continue searching for the next occurrence
-            Set foundCell = ws.Cells.FindNext(foundCell)
-        Loop While Not foundCell Is Nothing And foundCell.Address <> firstAddress
-    ElseIf Not foundCell Is Nothing And multi = 1 Then
-        If foundCell.row >= startRow Then
-            occurrences.Add foundCell
+            Set foundcell = ws.Cells.FindNext(foundcell)
+        Loop While Not foundcell Is Nothing And foundcell.Address <> firstAddress
+    ElseIf Not foundcell Is Nothing And multi = 1 Then
+        If foundcell.row >= startRow Then
+            occurrences.Add foundcell
         Else
             Set FindAllOccurrences = Nothing
             Exit Function
         End If
-    ElseIf foundCell Is Nothing Then
+    ElseIf foundcell Is Nothing Then
         Set FindAllOccurrences = Nothing
         Exit Function
     End If
@@ -565,7 +709,7 @@ Function FindDouble(ws As Worksheet, cellAddress As String) As Double
     Next cell
 
     ' If no Double value is found
-    MsgBox "No Double value found in row " & searchRow & " of worksheet: " & ws.Name, vbInformation
+    MsgBox "No Double value found in row " & searchRow & " of worksheet: " & ws.name, vbInformation
     FindDouble = 0 ' Return 0 if no Double value is found
     Exit Function
 
@@ -589,6 +733,7 @@ Function FindTransactions(ws As Worksheet, folioRange As Range, startRange As Ra
     Dim numValue As Double
     Dim rowOutput As String
     Dim spcltrans As Boolean
+    Dim datestart As Date, dateend As Date
     
     ' Initialize row counter (starting from startRange row)
     currentRow = WorksheetFunction.Max(folioRange.row, startRange.row, isinrange.row) + 1
@@ -600,6 +745,8 @@ Function FindTransactions(ws As Worksheet, folioRange As Range, startRange As Ra
         Else
             currentRow = currentRow + 1
         End If
+'    Else
+'        currentRow = currentRow + 1
     End If
     ' Loop through the rows until the last non-empty row in the column
     Do While currentRow <= ws.Cells(ws.Rows.Count, folioRange.Column).End(xlUp).row
@@ -618,6 +765,16 @@ Function FindTransactions(ws As Worksheet, folioRange As Range, startRange As Ra
                 If keyCounter = 0 And IsDate(row.Cells(colIndex).Value) Then
                     rowData.Add "Date", row.Cells(colIndex).Value
                     keyCounter = keyCounter + 1
+                'CHECK For no NEW Transaction
+                ElseIf keyCounter = 0 And VarType(row.Cells(colIndex).Value) = vbString Then
+                    If InStr(row.Cells(colIndex).Value, "No transactions during this statement period") Then
+                        FindAndExtractDates datestart, dateend
+                        rowData.Add "Date", dateend
+                        rowData.Add "Transaction", row.Cells(colIndex).Value
+                        result.Add rowData
+                        Set FindTransactions = result
+                        Exit Function
+                    End If
                 ' Check for transaction (text)
                 ElseIf keyCounter = 1 And VarType(row.Cells(colIndex).Value) = vbString Then
                     rowData.Add "Transaction", row.Cells(colIndex).Value
@@ -698,8 +855,8 @@ ErrorHandler:
     Set FindTransactions = Nothing
 End Function
 
-Function WriteMFData(fileName As String, transactionData As Collection, Optional ISIN As String, Optional folio As String, Optional openbal As Double) As Boolean
-    ' Version 1.0.0 - Writes mutual fund transaction data to a worksheet
+Function WriteMFData(fileName As String, transactionData As Collection, Optional isin As String, Optional folio As String, Optional openbal As Double) As Boolean
+    'Version 3.2.15 - Writes mutual fund transaction data to a worksheet
     'On Error GoTo ErrorHandler ' Enable error handling
 
     Dim wb As Workbook
@@ -715,7 +872,7 @@ Function WriteMFData(fileName As String, transactionData As Collection, Optional
 
     tsheetFound = False
         For Each wb In Application.Workbooks
-            If wb.Name = fileName Then
+            If wb.name = fileName Then
                 Exit For
             End If
         Next wb
@@ -725,18 +882,18 @@ If wb Is Nothing Then
         Set wb = Workbooks.Open(filepath)
         'On Error GoTo ErrorHandler
         If wb Is Nothing Then
-            'Exit Function File not found Return 0 for errors
-            'PE1 create file if not found
+            'PE1 - create file if not found instead of error
              Set wb = Workbooks.Add
             ' Optionally, save the new workbook with the specified path and name
             wb.SaveAs fileName:=filepath
+            'new workbook tasks
+            WBAdd = True
         End If
-
 End If
 
 ' Look for the sheet with the specified name
 For Each ws In wb.Sheets
-        If ws.Name = ISIN Then
+        If ws.name = isin Then
             tsheetFound = True
             newtsheet = False
             Exit For
@@ -744,12 +901,11 @@ For Each ws In wb.Sheets
     Next ws
 ' If not found, create the sheet
 If Not tsheetFound Then
-        Set ws = wb.Sheets.Add(after:=wb.Sheets(wb.Sheets.Count))
-        ws.Name = ISIN
-        'Set tempws = wb.Sheets("Sheet1")
-        tsheetFound = True
-        newtsheet = True
-    End If
+    Set ws = wb.Sheets.Add(after:=wb.Sheets(wb.Sheets.Count))
+    ws.name = isin
+    tsheetFound = True
+    newtsheet = True
+End If
     ' Successfully opened the file and found/created the sheet
     
     'On Error GoTo ErrorHandler
@@ -759,8 +915,8 @@ If Not tsheetFound Then
     
     If newtsheet And tsheetFound Then
         ws.Range("A1").Value = folio
-        ws.Range("B1").Value = ISIN
-        If GetFundNameByISIN(Right(ISIN, 12)) <> "" Then ws.Range("C1").Value = GetFundNameByISIN(Right(ISIN, 12))
+        ws.Range("B1").Value = isin
+        If GetFundNameByISIN(Right(isin, 12), 3) <> "" Then ws.Range("C1").Value = GetFundNameByISIN(Right(isin, 12), 3)
         ws.Range("A2").Value = "Opening balance :" & openbal
     ' Write headers if the sheet is empty
         For j = LBound(colHeaders) To UBound(colHeaders)
@@ -801,12 +957,102 @@ End Function
 Function FileExists(filepath As String) As Boolean
     On Error Resume Next
     FileExists = (Dir(filepath) <> "")
+    'MsgBox (Dir(filepath) <> "")
     On Error GoTo 0
 End Function
 Sub MyDebugPrint(message As String)
-    Debug.Print message ' Traditional debug print for developer's immediate window
+    Debug.Print message ' Traditional debug print for developer's immediate window turn on if you need to debug
     frmSplash.TextBox1.MultiLine = True
     frmSplash.TextBox1.Value = message & frmSplash.TextBox1.Value ' Update the ListBox in the splash screen
     frmSplash.TextBox1.SelStart = Len(frmSplash.TextBox1.Text)
     frmSplash.Repaint ' Refresh the form to show new messages immediately
+End Sub
+
+Private Sub deleteallsheets()
+
+Dim wb As Workbook
+Dim ws As Worksheet
+Application.DisplayAlerts = False
+Set wb = ThisWorkbook
+For Each ws In wb.Sheets
+        If ws.name = "Helper" Or wb.Sheets.Count = 1 Then
+        'do nothing
+        Else
+            ws.Delete
+        End If
+    Next ws
+Application.DisplayAlerts = True
+End Sub
+
+Private Sub DeleteAllQueriesAndConnections()
+    Dim conn As WorkbookConnection
+    Dim query As QueryTable
+    Dim ws As Worksheet
+
+    ' Delete all Workbook Connections
+    For Each conn In ThisWorkbook.Connections
+        On Error Resume Next ' In case there are issues with some connections
+        conn.Delete
+        On Error GoTo 0 ' Reset error handling
+    Next conn
+
+    ' Delete all Power Query Queries (if any)
+    On Error Resume Next ' Skip if the Queries collection does not exist
+    For Each pq In ThisWorkbook.Queries
+        pq.Delete
+    Next pq
+    On Error GoTo 0 ' Reset error handling
+
+    ' Clear any QueryTables in the worksheets (Power Query tables)
+    For Each ws In ThisWorkbook.Sheets
+        On Error Resume Next ' In case there are no QueryTables on the sheet
+        For Each query In ws.QueryTables
+            query.Delete
+        Next query
+        On Error GoTo 0 ' Reset error handling
+    Next ws
+
+    'MsgBox "All data queries and connections have been deleted.", vbInformation
+End Sub
+
+Private Sub RemoveAllControls()
+Dim shp As Shape
+On Error GoTo lol
+For Each shp In ThisWorkbook.Sheets("Helper").Shapes
+shp.Delete
+Next shp
+lol:
+End Sub
+
+Sub FindAndExtractDates(ByRef datestart As Date, ByRef dateend As Date)
+    Dim ws As Worksheet
+    Dim wb As Workbook
+    Dim foundcell As Range
+    Dim fullText As String
+    Dim dateParts() As String
+    Dim dateText As String
+    Dim startPos As Long
+    
+    CASFound = False
+
+    Set wb = ThisWorkbook
+    'check if extracted data in step 2 is found
+    For Each ws In wb.Sheets
+    If CASFound = True Then Exit Sub
+    If ws.name <> "Sheet1" And ws.name <> "PDF_Table_IDs" And ws.name <> "Helper" Then
+        Set foundcell = ws.Cells.Find(What:="Consolidated Account Statement", LookIn:=xlValues, LookAt:=xlPart)
+        If Not foundcell Is Nothing Then
+        On Error Resume Next
+            fullText = foundcell.Value
+            If Len(fullText) <> 57 Then Exit Sub
+            startPos = InStr(fullText, "Consolidated Account Statement") + Len("Consolidated Account Statement") + 1
+            dateText = Mid(fullText, startPos, Len(fullText) - startPos + 1)
+            dateParts = Split(dateText, "To")
+            datestart = dateValue(Trim(dateParts(0)))
+            dateend = dateValue(Trim(dateParts(1)))
+            CASFound = True
+            'Debug.Print dateStart & "_" & dateEnd
+        End If
+    End If
+    Next ws
 End Sub

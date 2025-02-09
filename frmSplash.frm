@@ -21,25 +21,23 @@ Private Declare PtrSafe Function GetWindowLong Lib "user32" Alias "GetWindowLong
 Private Const GWL_STYLE As Long = -16
 Private Const WS_CAPTION = &HC00000
 
-' ... rest of your code
 
 Private Sub UserForm_Activate()
     Dim hwnd As Long
     hwnd = FindWindow("ThunderDFrame", Me.Caption)
     SetWindowLong hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) And Not WS_CAPTION
     DrawMenuBar hwnd
-    
 End Sub
-Public Sub UpdateProgressBar(Percentage As Single)
+Public Sub UpdateProgressBar(percentage As Single)
     With Me
-        .lblProgressBar.Width = Percentage * (.frmBarFrame.Width - 10) ' Subtract 10 for better look
-        .lblProgressText.Caption = Format(Percentage, "0%") & " Complete"
+        .lblProgressBar.Width = percentage * (.frmBarFrame.Width - 10) ' Subtract 10 for better look
+        .lblProgressText.Caption = Format(percentage, "0%") & " Complete"
         DoEvents ' Ensures the form updates
     End With
-    If Percentage = 100 Then
-    Me.lblProgressText.Caption = "COMPLETED"
-Application.Wait Now + TimeValue("00:00:05")
-End If
+    If percentage = 100 Then
+        Me.lblProgressText.Caption = "COMPLETED"
+        Application.Wait Now + TimeValue("00:00:05")
+    End If
 End Sub
 
 Public Sub HideProgressBar()
@@ -48,7 +46,7 @@ Public Sub HideProgressBar()
     ' If you want to hide the bar entirely, you might consider making these controls invisible instead
 End Sub
 
-Private Sub UserForm_Deactivate()
-
-
+Public Sub UpdateCap(name As String)
+Cap.Caption = name
+DoEvents
 End Sub
