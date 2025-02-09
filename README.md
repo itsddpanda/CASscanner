@@ -39,19 +39,19 @@ Secondly, goto (https://www.amfiindia.com/nav-history-download) and download Cli
 
 Please do not miss these two.
 
-#### 0.  Starting Fresh or Restart
+#### STEP 0.  Starting Fresh or Restart
 Ensure you are starting fresh or if something went wrong in between and you are restarting. 
 
 Simply follow next line
 Goto developer tools or press ALT + F8. 
 Select Macro Named **"Restart"** and hit RUN to ensure you are starting fresh.
 
-#### 1.  Step 1
+#### STEP 1.  Step 1
 Now you are all set to start. Follow above step and Select Macro Named **"Step1_SelectPDFFile"**
 - Select the unlocked PDF File as explained in Pre-Requisites
 - Provide Name of the excel sheet where data will be stored (tested with .xlsx)
 - Select NAVAll.txt (if you get an error saying file not found, place the file in the same folder as your macro excel sheet and restart)
-If all 3 are provided now, you can Launch the app or
+If all 3 are provided now, you can **Launch** the app, i.e. rest of the steps can be run as per the order or run them 1 at a time, AKA the - 
 
-### 2 to 4 Remaining steps
+###  STEPS 2 to 4 Remaining steps
 Rest of the steps - keep on selecting the next step (2,3 and 4) in order and you should be ok.
