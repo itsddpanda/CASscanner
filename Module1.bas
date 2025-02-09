@@ -80,7 +80,7 @@ FetchFN = False
     ws.Cells.EntireColumn.AutoFit
 150
 If goforlaunch = 2 Then
-    If MsgBox("You are go for LAUNCH, LAUNCH IT?", vbYesNo, "Conditions Met") = vbYes Then
+    If MsgBox("You are go for LAUNCH...All 3 conditions met" & vbCrLf & "Do want to LAUNCH IT?", vbYesNo, "Conditions Met") = vbYes Then
         frmSplash.Show vbModeless
         frmSplash.UpdateCap "LAUNCHING - STEP 2/4 - READ and EXTRACT PDF SCHEMA - KEEP FINGERS CROSSED"
         Step2_ExtractTableIDs
@@ -250,7 +250,7 @@ If filepath = "" Then
 End If
 
 If Dir(filepath) = "" Then
-      MsgBox "The specified file does not exist. Please check the path.", vbCritical
+      MsgBox "The specified NAVAll file does not exist. Please check the path.", vbCritical
       Exit Function
 End If
     ' Open the file to search for the ISIN
