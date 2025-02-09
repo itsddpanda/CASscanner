@@ -30,19 +30,19 @@ If you are importing-
 ### Run it aka use the excel sheet
 Either you imported the modules (and form) or using the excel here in follow the steps and you should be golden
 
-  Pre-Requisites
+  ###Pre-Requisites
       You would need CAS, - Get CAS from Karvy, ![](https://mfs.kfintech.com/investor/General/ConsolidatedAccountStatement).
       Since this file is password protected, you would need to unlock it and make it password free i.e. opens without password. Google "pdf password removal". 
       You will get many online tools for it.
       Secondly, goto ![](https://www.amfiindia.com/nav-history-download) and download Click on "Download Complete NAV Report in Text Format", save it and give it a name "NAVAll.txt".
       Please do not miss it.
 
-#### 0. Starting Fresh or Restart
+#### 0.  Starting Fresh or Restart
 Ensure you are starting fresh and if something went wrong in between and you are restarting, follow next line
-```Goto developer tools or press ALT + F8. 
-Select Macro Named "Restart" and hit RUN to ensure you are starting fresh.```
+Goto developer tools or press ALT + F8. 
+Select Macro Named "Restart" and hit RUN to ensure you are starting fresh.
 
-#### 1. Step 1
+#### 1.  Step 1
 Now you are all set to start. Follow above step and Select Macro Named "Step1_SelectPDFFile"
 - Select the unlocked PDF File as explained in Pre-Requisites
 - Provide Name of the excel sheet where data will be stored (tested with .xlsx)
