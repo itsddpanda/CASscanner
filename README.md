@@ -37,7 +37,7 @@ You would need CAS, - Get CAS from Karvy(https://mfs.kfintech.com/investor/Gener
 Since this file is password protected, you would need to unlock it and make it password free i.e. opens without password. Google "pdf password removal". 
 You will get many online tools for it.
 
-Secondly, goto (https://www.amfiindia.com/nav-history-download) and download Click on "Download Complete NAV Report in Text Format", save it and give it a name "NAVAll.txt".
+Secondly, goto (https://www.amfiindia.com/nav-history-download) and Click on "Download Complete NAV Report in Text Format", save it and give it a name "NAVAll.txt".
 
 Please do not miss these two.
 
