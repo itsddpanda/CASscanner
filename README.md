@@ -18,4 +18,40 @@ And at last all you you can do is to just improve the code here please do, its j
 And if that is not even possible, share it with anyone who can use excel and want get away from these apps.
 
 A quick user guide is on its way! Link will be updated soon.
-      
+
+### How to use?
+Before you start, 
+If you are importing-
+1. Create a new excel file, save as macro enabled excel. Enable Developer tools.
+2. Import the form and modules (There is repetetive code or extra code that is not used, feel free to delete with caution)
+3. Enable the referencces, as per below screenshot. Follow Run steps from below
+![](https://github.com/itsddpanda/CASscanner/blob/main/Project%20Refs.png)
+
+### Run it aka use the excel sheet
+Either you imported the modules (and form) or using the excel here in follow the steps and you should be golden
+
+<details>
+
+      <summary> Pre-Requisites </summary>
+      You would need CAS, - Get CAS from Karvy, ![](https://mfs.kfintech.com/investor/General/ConsolidatedAccountStatement).
+      Since this file is password protected, you would need to unlock it and make it password free i.e. opens without password. Google "pdf password removal". 
+      You will get many online tools for it.
+      Secondly, goto ![](https://www.amfiindia.com/nav-history-download) and download Click on "Download Complete NAV Report in Text Format", save it and give it a name "NAVAll.txt".
+      Please do not miss it.
+
+</details>
+
+#### 0. Starting Fresh or Restart
+Ensure you are starting fresh and if something went wrong in between and you are restarting, follow next line
+```Goto developer tools or press ALT + F8. 
+Select Macro Named "Restart" and hit RUN to ensure you are starting fresh.```
+
+#### 1. Step 1
+Now you are all set to start. Follow above step and Select Macro Named "Step1_SelectPDFFile"
+- Select the unlocked PDF File as explained in Pre-Requisites
+- Provide Name of the excel sheet where data will be stored (tested with .xlsx)
+- Select NAVAll.txt (if you get an error saying file not found, place the file in the same folder as your macro excel sheet and restart)
+If all 3 are provided now, you can Launch the app or
+
+### 2 to 4 Remaining steps
+Rest keep on selecting the next step and you should be ok.
