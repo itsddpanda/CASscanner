@@ -34,8 +34,7 @@ Either you imported the modules (and form) or using the excel here in follow the
 You would need CAS, - Get CAS from Karvy(https://mfs.kfintech.com/investor/General/ConsolidatedAccountStatement). Select detailed report
 ![](https://github.com/itsddpanda/CASscanner/blob/main/delete.png)
 
-Since this file is password protected, you would need to unlock it and make it password free i.e. opens without password. Google "pdf password removal" or use tools like qpdf (https://github.com/qpdf/qpdf/releases/).
-You will get many online tools for it.
+Since this file is password protected, you would need to unlock it and make it password free i.e. opens without password. Google "pdf password removal", you will get many online tools for it. Or use tools like qpdf (https://github.com/qpdf/qpdf/releases/) to remove the password from the file.
 
 Secondly, goto (https://www.amfiindia.com/nav-history-download) and Click on "Download Complete NAV Report in Text Format", save it and give it a name "NAVAll.txt".
 
