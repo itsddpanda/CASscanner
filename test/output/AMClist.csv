@@ -1,0 +1,35 @@
+amc,filename,schemes,isin,amfi,valid,NAV,irr,Beginning Value,Ending Value,effective_balance,cagr
+Aditya Birla Sun Life Mutual Fund,Aditya_Birla_Sun_Life_Mutual_Fund.csv,ABSL Bal Bhavishya Yojna Direct Growth (Non-Demat,INF209KB1E84,146407,yes,19.18,0.1138,30000.0,57540.0,3000.0,0.1138
+AXIS Mutual Fund,AXIS_Mutual_Fund.csv,Axis Small Cap Fund Direct Growth,INF846K01K35,125354,no,,,0.0,0.0,,
+Canara Robeco Mutual Fund,Canara_Robeco_Mutual_Fund.csv,Canara Robeco Emerging Equities - Regular Growth,INF760K01167,102920,no,,,0.0,0.0,,
+DSP Mutual Fund,DSP_Mutual_Fund.csv,DSP Healthcare Fund - Dir - Growth (Non-Demat,INF740KA1LG1,145454,yes,40.928,-1.0,9999.0,17128.8591,418.512,0.2613
+HDFC Mutual Fund,HDFC_Mutual_Fund.csv,HDFC Defence Fund Direct Growth (Non-Demat,INF179KC1GI5,151750,yes,17.217,-1.0,39996.0,68864.5566,3999.8,0.3669
+HDFC Mutual Fund,HDFC_Mutual_Fund.csv,HDFC Focused 30 Fund - Direct Plan - Growth Option (Non-Demat,INF179K01VK7,118950,yes,232.589,-1.0,9999.0,15980.2598,68.706,0.2244
+HDFC Mutual Fund,HDFC_Mutual_Fund.csv,HDFC Small Cap Fund - Direct Growth Plan (Non-Demat,INF179KA1RW5,130503,yes,133.833,-1.0,9999.0,13261.3781,99.089,0.1776
+HSBC Mutual Fund,HSBC_Mutual_Fund.csv,HSBC Equity Savings Fund - Direct Growth (Non-Demat,INF917K01GE4,151060,yes,34.0545,-1.0,14998.5,14061.8863,412.923,-0.2259
+ICICI Prudential Mutual Fund,ICICI_Prudential_Mutual_Fund.csv,ICICI Prudential Commodities Fund Direct Plan Growth (Non-Demat,INF109KC1F91,147662,no,,,0.0,0.0,,
+ICICI Prudential Mutual Fund,ICICI_Prudential_Mutual_Fund.csv,ICICI Prudential Infrastructure Fund - Direct Plan - Growth (Non-Demat,INF109K018M4,120621,yes,180.74,,24997.5,35369.5528,195.693,0.2424
+ICICI Prudential Mutual Fund,ICICI_Prudential_Mutual_Fund.csv,ICICI Prudential MNC Fund Direct Plan Growth (Non-Demat,INF109KC1D93,147346,no,,,0.0,0.0,,
+ICICI Prudential Mutual Fund,ICICI_Prudential_Mutual_Fund.csv,ICICI Prudential Smallcap Fund - Direct Plan - Growth (Non-Demat,INF109K015M0,120591,yes,83.66,-1.0,9999.0,13996.318,167.3,0.1557
+ICICI Prudential Mutual Fund,ICICI_Prudential_Mutual_Fund.csv,ICICI Prudential Technology Fund - Direct Plan - Growth (Non-Demat,INF109K01Z48,120594,no,,,0.0,0.0,,
+Invesco Mutual Fund,Invesco_Mutual_Fund.csv,Invesco India Contra Fund - Direct Plan Growth,INF205K01LE4,120348,no,,,0.0,0.0,,
+Invesco Mutual Fund,Invesco_Mutual_Fund.csv,Invesco India Focused Fund - Direct Plan Growth,INF205KA1213,148481,yes,26.76,,19998.0,20459.251,764.546,0.0425
+Invesco Mutual Fund,Invesco_Mutual_Fund.csv,Invesco India Infrastructure Fund - Direct Plan Growth,INF205K01MD4,120405,yes,63.21,-1.0,14998.5,12888.835,203.905,-0.1886
+Kotak Mutual Fund,Kotak_Mutual_Fund.csv,Kotak Bluechip Fund - Direct Plan - Growth (Erstwhile Kotak 50 Scheme) (Non-Demat,INF174K01KW6,120152,no,,,0.0,0.0,,
+Kotak Mutual Fund,Kotak_Mutual_Fund.csv,Kotak Emerging Equity Fund- Direct Plan - Growth (Non-Demat,INF174K01LT0,119775,yes,130.13,-1.0,9999.0,15821.9862,121.586,0.2697
+Kotak Mutual Fund,Kotak_Mutual_Fund.csv,Kotak Infrastructure and Economic Reform Fund Direct Growth (Non-Demat,INF178L01AL9,133801,yes,64.0,-1.0,11447.63,17348.608,271.072,0.1994
+Kotak Mutual Fund,Kotak_Mutual_Fund.csv,Kotak Small Cap Fund - Direct Plan - Growth (Erstwhile Kotak Mid-Cap) (Non-Demat,INF174K01KT2,120164,no,,,0.0,0.0,,
+MOTILAL OSWAL MUTUAL FUND,MOTILAL_OSWAL_MUTUAL_FUND.csv,Motilal Oswal Large and Midcap Fund - Direct Plan Growth,INF247L01999,147704,yes,30.0331,-1.0,29997.0,25234.4413,840.221,-0.4929
+MOTILAL OSWAL MUTUAL FUND,MOTILAL_OSWAL_MUTUAL_FUND.csv,Motilal Oswal Midcap Fund - Direct Plan Growth,INF247L01445,127042,yes,104.1858,,59994.0,52907.9455,507.823,-0.2622
+Nippon India Mutual Fund,Nippon_India_Mutual_Fund.csv,NIPPON INDIA TAIWAN EQUITY FUND - DIRECT GROWTH PLAN,INF204KC1303,149329,yes,11.9605,-1.0,9999.0,14712.0967,1230.057,0.2215
+PPFAS Mutual Fund,PPFAS_Mutual_Fund.csv,Parag Parikh Flexi Cap Fund - Direct Plan (Non-Demat,INF879O01027,122639,yes,84.5628,,69993.0,71248.4717,842.551,0.0215
+Quant MF,Quant_MF.csv,quant Commodities Fund - Direct Plan,INF966L01DF3,152255,yes,11.9624,,39996.0,38648.3133,3230.816,-0.2871
+Quant MF,Quant_MF.csv,quant ELSS Tax Saver Fund - Direct Plan,INF966L01986,120847,yes,353.3396,,24997.5,22835.985,64.629,-0.4975
+Quant MF,Quant_MF.csv,quant Flexi Cap Fund - Direct Plan Growth,INF966L01911,120843,yes,95.6583,-1.0,9999.0,14059.8569,146.98,0.1583
+Quant MF,Quant_MF.csv,quant Focused Fund - Direct Plan,INF966L01853,120834,yes,85.0529,,39996.0,35616.5823,418.758,-0.2183
+Quant MF,Quant_MF.csv,quant Large and Mid Cap Fund - Direct Plan,INF966L01648,120826,yes,113.2608,,39996.0,37152.2607,328.024,-0.2263
+Quant MF,Quant_MF.csv,quant Multi Asset Fund - Direct Plan,INF966L01580,120821,yes,134.8977,,19998.0,19305.0749,143.109,-0.2641
+Quant MF,Quant_MF.csv,quant Quantamental Fund - Direct Plan,INF966L01AK9,148925,yes,21.3691,,29997.0,36172.544,1692.75,0.1347
+SBI Mutual Fund,SBI_Mutual_Fund.csv,SBI Contra Fund - Direct Plan - Growth (Non-Demat,INF200K01RA0,119835,yes,379.3825,,26997.3,4754.4215,12.532,-0.5339
+Tata Mutual Fund,Tata_Mutual_Fund.csv,Tata Digital India Fund Direct Plan Growth (Non-Demat,INF277K01Z77,135800,yes,55.1321,,373338.67,139466.7361,2529.683,-0.1393
+,,Portfolio,,981729.6,yes,814836.2211,,981729.6,814836.2211,,-0.0279
