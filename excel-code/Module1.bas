@@ -526,6 +526,7 @@ End If
             'MsgBox folioRange.Address & " : " & folioRange.Value
             Set ISINC = FindAllOccurrences(ws, "ISIN", 1, folioRange)
             isin = ExtractISINFromCollection(ISINC)
+            'if (len(isin)<12)
             'MsgBox ISINC(1) & " : " & ISIN
             Set openingbalance = FindAllOccurrences(ws, "Opening", 1, ISINC(1))
             If Not openingbalance Is Nothing Then
@@ -638,41 +639,51 @@ ErrorHandler:
     Set FindAllOccurrences = Nothing
 End Function
 
-Function ExtractISINFromCollection(occurrences As Collection) As String
-    ' Version 1.0.1 - Extract a single 13-character ISIN from a collection of cells
-    'On Error GoTo ErrorHandler ' Enable error handling
+Function ExtractISINFromCollection(occurrences As Collection) As String ' Return an array
 
     Dim cell As Range
     Dim cellContent As String
     Dim regex As Object
+    Dim reg As Object
     Dim matches As Object
+    Dim match As Object
+    Dim teststring As String
+    Dim isinString As String ' String to store concatenated ISINs
 
-    ' Create a RegExp object for matching ISIN pattern
+    On Error Resume Next ' Handle potential errors gracefully
     Set regex = CreateObject("VBScript.RegExp")
-    regex.Pattern = "ISIN:[A-Z0-9]{12}" ' Matches ISIN:<12 alphanumeric characters>
-    regex.Global = True
+    Set reg = CreateObject("VBScript.RegExp")
+    On Error GoTo 0
 
-    ' Loop through each cell in the collection
-    For Each cell In occurrences
-        cellContent = cell.Value
-        
-        ' Match the ISIN pattern in the cell content
-        If regex.test(cellContent) Then
-            Set matches = regex.Execute(cellContent)
-            ' Extract and return the ISIN without the "ISIN:" prefix
-            ExtractISINFromCollection = Mid(matches(0), 6, 13) ' Extract the 13-character ISIN
-            Exit Function ' Return on the first match
-        End If
-    Next cell
+    ' More flexible and case-insensitive pattern matching
+    regex.Pattern = "ISIN\s*[: -]*([A-Z0-9]{12})" ' Matches ISIN, handles spaces/hyphens/colons
+    regex.IgnoreCase = True ' Case-insensitive
+    regex.Global = True ' Find all matches (important if there are multiple)
+    reg.Pattern = "[^a-zA-Z0-9:]" ' Matches anything NOT a-z, A-Z, or 0-9
+    reg.Global = True ' Find all matches
 
-    ' If no ISIN is found, return an empty string
-    ExtractISINFromCollection = ""
-    Exit Function
+    If Not occurrences Is Nothing Then
+        For Each cell In occurrences
+            
+            teststring = CStr(cell.Value)
+            teststring = reg.Replace(teststring, "")
+            cellContent = Replace(CStr(teststring), " ", "")             ' Convert to string
 
-ErrorHandler:
-    ' Handle errors
-    MsgBox "An error occurred while extracting ISIN: " & Err.Description, vbCritical, "Error " & Err.Number
-    ExtractISINFromCollection = ""
+
+            If regex.test(cellContent) Then
+                Set matches = regex.Execute(cellContent)
+                For Each match In matches
+                    If Len(isinString) > 0 Then ' Add delimiter if ISINs already exist
+                        isinString = isinString & delimiter & match.SubMatches(0)
+                    Else
+                        isinString = match.SubMatches(0) ' First ISIN, no delimiter
+                    End If
+                Next match
+            End If
+        Next cell
+    End If
+    Debug.Print isinString
+    ExtractISINFromCollection = isinString
 End Function
 
 Function FindDouble(ws As Worksheet, cellAddress As String) As Double
@@ -682,6 +693,7 @@ Function FindDouble(ws As Worksheet, cellAddress As String) As Double
     Dim cell As Range
     Dim cellValue As Variant
     Dim DoubleCell As Double
+    Dim newvalue As String
 
     'On Error GoTo ErrorHandler ' Enable error handling
 
@@ -693,6 +705,14 @@ Function FindDouble(ws As Worksheet, cellAddress As String) As Double
     For Each cell In ws.Rows(searchRow).Cells
         If cell.Column >= startColumn Then
             cellValue = cell.Value
+            newvalue = Replace(cellValue, " ", "")
+            ' Remove all alphabetic characters (both uppercase and lowercase)
+            With CreateObject("VBScript.RegExp")
+                .Pattern = "[a-zA-Z;:/]"  ' Matches all letters (a-z and A-Z)
+                .Global = True
+                newvalue = .Replace(newvalue, "")
+            End With
+            cellValue = newvalue
             ' Check if the cell value is numeric
             If IsNumeric(cellValue) And Not IsEmpty(cellValue) Then
                 ' Try to convert the value to Double
@@ -835,7 +855,7 @@ Function FindTransactions(ws As Worksheet, folioRange As Range, startRange As Ra
         End If
 
         ' Exit condition: If the first non-empty cell in the row is not a date, exit the function
-        If keyCounter > 0 And Not IsDate(row.Cells(folioRange.Column).Value) And result.Count > 1 Then
+        If keyCounter >= 0 And Not IsDate(row.Cells(folioRange.Column).Value) And result.Count > 1 Then
             'MsgBox "Exiting function: Row " & currentRow & " has a non-date value in the first non-empty cell."
             MyDebugPrint "Return function as Row " & currentRow & " has a non-date value in the first non-empty cell."
             Set FindTransactions = result ' Return the rows processed so far
